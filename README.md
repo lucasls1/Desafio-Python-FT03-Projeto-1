@@ -6,10 +6,10 @@ do tempo no Open-Meteo.
 
 ## Preparar
 
-No terminal, instale a dependência:
+No terminal, entre nesta pasta e instale a dependência:
 
 ```bash
-python -m pip install request
+python -m pip install -r requirements.txt
 ```
 
 ## Executar
