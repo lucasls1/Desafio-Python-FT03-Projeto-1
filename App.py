@@ -1,7 +1,7 @@
 import re # Biblioteca Para localizar,identificar,validar,extrair e substituir padrões de texto.
 import requests # Biblioteca para comunicação com sites, APIs
 import time
-
+from transformacao import transformar_dados # importando a função do arquivo transformação
 MAX_TENTATIVAS = 3 # Número maximo de tentatis de chamadas a APIs
 INTERVALO_MINIMO = 1.0  # segundos entre chamadas às APIs
 _ultima_requisicao = 0.0 # Guarda o tempo da ultima requisição 
@@ -89,6 +89,8 @@ def consultar_clima(latitude: float, longitude: float) -> dict:
             "latitude": latitude,
             "longitude": longitude,
             "current": "temperature_2m",
+            "daily": "temperature_2m_min,temperature_2m_max,precipitation_sum",
+            "forecast_days": 3,
             "timezone": "America/Sao_Paulo",
         },
         timeout=10,
@@ -125,7 +127,18 @@ def main() -> None:
         print("\nClima atual:")
         print(f"Horário: {atual['time']}")
         print(f"Temperatura: {atual['temperature_2m']} °C")
+
         
+        previsoes = transformar_dados(cep, endereco, clima) # chamada da função, passando os parametros.
+        print("\nPrevisão transformada (SQLite):")
+        # Pecorre cada previsão na variavel previsões
+        for previsao in previsoes:
+            print(
+                f"{previsao['data']}: mínima {previsao['temperatura_minima']} °C, "
+                f"máxima {previsao['temperatura_maxima']} °C, "
+                f"chuva {previsao['precipitacao_mm']} mm, "
+                f"amplitude {previsao['amplitude_termica']} °C"
+            )
         # Tratamento para erros de valores invalidos
     except ValueError as erro:
          print(f"Entrada inválida: {erro}")

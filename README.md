@@ -42,5 +42,28 @@ o formato correto.
 - Erros HTTP 4xx diferentes de 429 não são repetidos, pois normalmente indicam
   um problema na solicitação.
 
+  ## Transformação e SQL
+
+`transformacao.py` carrega as duas respostas JSON em tabelas temporárias
+SQLite e retorna uma linha por dia de previsão. O SQL usa `json_each` para
+abrir o array de datas e consulta os outros arrays pela mesma posição, uma
+operação equivalente a `UNNEST`/`EXPLODE`.
+
+Transformações aplicadas:
+
+1. **Tipos e datas:** temperaturas e chuva são convertidas para números com
+   `CAST`; as datas são normalizadas em ISO para ordenação e deduplicação e
+   exibidas no formato `dia/mês/ano` com `strftime(...)`.
+2. **Nulos:** `COALESCE` substitui bairro/cidade/UF ausentes e considera chuva
+   ausente como `0.0` mm.
+3. **Deduplicação:** CEP é chave primária da tabela de endereços; previsões
+   repetidas para o mesmo CEP e data são reduzidas com `ROW_NUMBER()`.
+4. **JOIN:** endereço e previsão são combinados pelo CEP.
+5. **Enriquecimento de métricas:** calcula amplitude térmica (máxima menos
+   mínima) e classifica o dia como `com chuva` ou `sem chuva`.
+
+Os dados SQLite ficam em memória durante a execução; ainda não tem um
+banco persistente em arquivo.
+
 Documentação: [ViaCEP](https://viacep.com.br/), [geocodificação Open-Meteo](https://open-meteo.com/en/docs/geocoding-api) e [previsão Open-Meteo](https://open-meteo.com/en/docs).
 
